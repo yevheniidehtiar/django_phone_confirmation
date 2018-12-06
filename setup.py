@@ -17,7 +17,7 @@ setup(
     install_requires=[
         'djangorestframework',
         'django-sendsms==0.3.1',
-        'django-phonenumber-field==2.0.0'
+        'django-phonenumber-field>=2.0.0'
     ],
     include_package_data=True,
     url='https://github.com/ricardosasilva/django_phone_confirmation',

@@ -65,6 +65,7 @@ class PhoneConfirmation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     phone_number = PhoneNumberField(db_index=True)
     code = RandomPinField(length=CODE_LENGTH)
+    first_name = models.CharField(max_length=120)
     objects = PhoneConfirmationManager()
 
     class Meta:
@@ -106,7 +107,9 @@ class PhoneConfirmation(models.Model):
         self._send_signal_and_log(confirmation_sms_sent, phone_number=self.phone_number)
 
     def send_activation_key_created_signal(self, user=None):
-        self._send_signal_and_log(activation_key_created, phone_number=self.phone_number, activation_key=self.activation_key, user=user)
+        self._send_signal_and_log(activation_key_created,
+                                  phone_number=self.phone_number, first_name=self.first_name,
+                                  activation_key=self.activation_key, user=user)
 
 
 @receiver(post_save, sender=PhoneConfirmation)
