@@ -65,7 +65,7 @@ class PhoneConfirmation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     phone_number = PhoneNumberField(db_index=True)
     code = RandomPinField(length=CODE_LENGTH)
-    first_name = models.CharField(max_length=120)
+    first_name = models.CharField(null=True, blank=True, max_length=120)
     objects = PhoneConfirmationManager()
 
     class Meta:
