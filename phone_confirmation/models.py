@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-
+import secrets
 import logging
 from datetime import timedelta
 
@@ -16,17 +16,24 @@ from sendsms import api
 
 logger = logging.getLogger(__name__)
 
-
 phone_settings = getattr(settings, 'PHONE_CONFIRMATION', {})
-
 
 SALT = phone_settings.get('SALT', 'phonenumber')
 ACTIVATION_TIMEOUT = phone_settings.get('ACTIVATION_TIMEOUT', 15 * 60)  # Seconds
+TOKEN_PERIOD = phone_settings.get('TOKEN_PERIOD', 1)  # 1 hour as default
 SMS_MESSAGE = phone_settings.get('SMS_MESSAGE', 'Your confirmation code is %(code)s')
 FROM_NUMBER = phone_settings.get('FROM_NUMBER', '')
 MAX_CONFIRMATIONS = phone_settings.get('MAX_CONFIRMATIONS', 10)
 SILENT_CONFIRMATIONS_FILTER = phone_settings.get('SILENT_CONFIRMATIONS_FILTER', None)
 CODE_LENGTH = phone_settings.get('CONFIRMATION_CODE_LENGTH', 6)
+
+
+def generate_token():
+    return secrets.token_urlsafe(32)
+
+
+def token_period_expiration_date():
+    return timezone.now() + timezone.timedelta(hours=TOKEN_PERIOD)
 
 
 class PhoneConfirmationManager(models.Manager):
@@ -52,11 +59,11 @@ class PhoneConfirmationManager(models.Manager):
         """Get the PhoneConfirmation for the phone number and code."""
         time_threshold = timezone.now() - timedelta(minutes=ACTIVATION_TIMEOUT)
         if id is not None:
-            return self.get(id)
+            return self.get(pk=id)
         else:
             return self.get_queryset().filter(created_at__gte=time_threshold,
-                                          phone_number=phone_number,
-                                          code=code).order_by('-created_at').first()
+                                              phone_number=phone_number,
+                                              code=code).order_by('-created_at').first()
 
     def clear_phone_number_confirmations(self, phone_number):
         """Remove all confirmations for the phone number."""
@@ -70,13 +77,14 @@ class PhoneConfirmation(models.Model):
     code = RandomPinField(length=CODE_LENGTH)
     first_name = models.CharField(null=True, blank=True, max_length=120)
     objects = PhoneConfirmationManager()
+    activation_key = models.CharField(unique=True, default=generate_token, max_length=256)
 
     class Meta:
         index_together = (('created_at', 'phone_number', 'code'), ('phone_number', 'code'))
 
     @property
-    def activation_key(self):
-        return self._get_activation_key(self.phone_number)
+    def expiration_date(self):
+        return token_period_expiration_date()
 
     def __str__(self):
         return str(self.phone_number)
@@ -110,9 +118,9 @@ class PhoneConfirmation(models.Model):
         self._send_signal_and_log(confirmation_sms_sent, phone_number=self.phone_number)
 
     def send_activation_key_created_signal(self, user=None):
-        self._send_signal_and_log(activation_key_created,
+        self._send_signal_and_log(activation_key_created, user=user,
                                   phone_number=self.phone_number, first_name=self.first_name,
-                                  activation_key=self.activation_key, user=user)
+                                  expiration_date=self.expiration_date, activation_key=self.activation_key)
 
 
 @receiver(post_save, sender=PhoneConfirmation)

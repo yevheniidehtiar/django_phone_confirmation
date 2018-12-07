@@ -55,9 +55,10 @@ class ActivationKeyMobileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PhoneConfirmation
-        fields = ('auth_token', 'confirmation_id', 'confirmation_code')
+        fields = ('auth_token', 'confirmation_id', 'confirmation_code', 'expiration_date')
         extra_kwargs = {
             'auth_token': {'read_only': True},
+            'expiration_date': {'read_only': True},
             'confirmation_id': {'write_only': True},
             'confirmation_code': {'write_only': True},
         }
@@ -74,14 +75,14 @@ class ActivationKeyMobileSerializer(serializers.ModelSerializer):
     def is_valid(self, raise_exception=False):
         is_valid = super(ActivationKeyMobileSerializer, self).is_valid(raise_exception=raise_exception)
         self.instance = self.Meta.model.objects. \
-            get_confirmation_code(id=self.validated_data.get('confirmation_id'),
+            get_confirmation_code(id=self.initial_data.get('confirmation_id'),
                                   phone_number=self.validated_data.get('phone_number'),
-                                  code=self.validated_data.get('confirmation_code'))
+                                  code=self.initial_data.get('confirmation_code'))
         if is_valid:
             if self.instance:
                 self.instance.send_activation_key_created_signal()
                 self.Meta.model.objects.clear_phone_number_confirmations(
-                    phone_number=self.instance['phone_number'])
+                    phone_number=self.instance.phone_number)
             else:
                 raise serializers.ValidationError({"error": _("The confirmation code or id are invalid.")})
         return is_valid
