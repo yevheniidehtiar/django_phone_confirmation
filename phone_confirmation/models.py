@@ -48,10 +48,13 @@ class PhoneConfirmationManager(models.Manager):
         except signing.BadSignature:
             return None
 
-    def get_confirmation_code(self, phone_number, code):
+    def get_confirmation_code(self, phone_number, code, id=None):
         """Get the PhoneConfirmation for the phone number and code."""
         time_threshold = timezone.now() - timedelta(minutes=ACTIVATION_TIMEOUT)
-        return self.get_queryset().filter(created_at__gte=time_threshold,
+        if id is not None:
+            return self.get(id)
+        else:
+            return self.get_queryset().filter(created_at__gte=time_threshold,
                                           phone_number=phone_number,
                                           code=code).order_by('-created_at').first()
 

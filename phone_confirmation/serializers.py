@@ -59,7 +59,7 @@ class ActivationKeyMobileSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'auth_token': {'read_only': True},
             'confirmation_id': {'write_only': True},
-            'confirmation_id': {'confirmation_code': True},
+            'confirmation_code': {'write_only': True},
         }
 
     def get_code(self, obj):
@@ -75,6 +75,7 @@ class ActivationKeyMobileSerializer(serializers.ModelSerializer):
         is_valid = super(ActivationKeyMobileSerializer, self).is_valid(raise_exception=raise_exception)
         self.instance = self.Meta.model.objects. \
             get_confirmation_code(id=self.validated_data.get('confirmation_id'),
+                                  phone_number=self.validated_data.get('phone_number'),
                                   code=self.validated_data.get('confirmation_code'))
         if is_valid:
             if self.instance:
