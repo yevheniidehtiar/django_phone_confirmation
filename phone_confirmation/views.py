@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from phone_confirmation.models import PhoneConfirmation
 from phone_confirmation.serializers import (ActivationKeySerializer,
-                                            ConfirmationSerializer)
+                                            ConfirmationSerializer, ActivationKeyMobileSerializer)
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,17 @@ class ActivationKeyView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = ActivationKeySerializer(data=request.data, context={'user': request.user})
+        if serializer.is_valid():
+            return Response(status=status.HTTP_200_OK, data=serializer.data)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
+
+class ActivationKeyMobileView(APIView):
+    throttle_scope = 'phone-confirmation-activation-key'
+
+    def post(self, request, *args, **kwargs):
+        serializer = ActivationKeyMobileSerializer(data=request.data)
         if serializer.is_valid():
             return Response(status=status.HTTP_200_OK, data=serializer.data)
         else:

@@ -58,7 +58,8 @@ class ActivationKeyMobileSerializer(serializers.ModelSerializer):
         fields = ('auth_token', 'confirmation_id', 'confirmation_code')
         extra_kwargs = {
             'auth_token': {'read_only': True},
-            'auth_token': {'read_only': True},
+            'confirmation_id': {'write_only': True},
+            'confirmation_id': {'confirmation_code': True},
         }
 
     def get_code(self, obj):
