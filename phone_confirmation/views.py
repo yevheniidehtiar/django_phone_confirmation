@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from phone_confirmation.models import PhoneConfirmation
-from phone_confirmation.serializers import (ActivationKeySerializer,
+from phone_confirmation.serializers import (ActivationKeySerializer, ConfirmationMobileSerializer,
                                             ConfirmationSerializer, ActivationKeyMobileSerializer)
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,11 @@ class ActivationKeyView(APIView):
             return Response(status=status.HTTP_200_OK, data=serializer.data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
+
+
+class ConfirmationMobileView(generics.CreateAPIView):
+    serializer_class = ConfirmationMobileSerializer
+    throttle_scope = 'phone-confirmation-confirmation'
 
 
 class ActivationKeyMobileView(APIView):
