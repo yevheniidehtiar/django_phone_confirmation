@@ -27,22 +27,6 @@ class ActivationKeyView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
 
 
-class ConfirmationMobileView(generics.CreateAPIView):
-    serializer_class = ConfirmationMobileSerializer
-    throttle_scope = 'phone-confirmation-confirmation'
-
-
-class ActivationKeyMobileView(APIView):
-    throttle_scope = 'phone-confirmation-activation-key'
-
-    def post(self, request, *args, **kwargs):
-        serializer = ActivationKeyMobileSerializer(data=request.data)
-        if serializer.is_valid():
-            return Response(status=status.HTTP_200_OK, data=serializer.data)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
-
-
 class GetActivationKeyView(APIView):
     throttle_scope = 'phone-confirmation-activation-key'
 
@@ -55,3 +39,19 @@ class GetActivationKeyView(APIView):
             logger.exception('Error decoding activation key')
 
         return Response(status=status.HTTP_400_BAD_REQUEST, data={'error': 'Invalid activation key'})
+
+
+class ConfirmationMobileView(generics.CreateAPIView):
+    serializer_class = ConfirmationMobileSerializer
+    throttle_scope = 'mobile-api-get-confirmation-code'
+
+
+class ActivationKeyMobileView(APIView):
+    throttle_scope = 'mobile-api-activate-confirmation-code'
+
+    def post(self, request, *args, **kwargs):
+        serializer = ActivationKeyMobileSerializer(data=request.data)
+        if serializer.is_valid():
+            return Response(status=status.HTTP_200_OK, data=serializer.data)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=serializer.errors)
