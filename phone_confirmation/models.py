@@ -10,7 +10,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from phone_confirmation.fields import RandomPinField
-from phone_confirmation.signals import confirmation_sms_sent, activation_key_created
+from phone_confirmation.signals import confirmation_sms_sent, activation_key_created, mobile_token_created
 from phonenumber_field.modelfields import PhoneNumberField
 from sendsms import api
 
@@ -112,14 +112,17 @@ class PhoneConfirmation(models.Model):
             logger.debug("Filtered phone confirmation SMS to:%s text:%s", to, message)
             return
 
-        api.send_sms(body=message,
-                     from_phone=FROM_NUMBER,
-                     to=[to])
+        api.send_sms(body=message, from_phone=FROM_NUMBER, to=[to])
+
         self._send_signal_and_log(confirmation_sms_sent, phone_number=self.phone_number)
 
     def send_activation_key_created_signal(self, user=None):
         self._send_signal_and_log(activation_key_created, user=user,
                                   phone_number=self.phone_number, first_name=self.first_name,
+                                  expiration_date=self.expiration_date, activation_key=self.activation_key)
+
+    def send_mobile_token_created_signal(self):
+        self._send_signal_and_log(mobile_token_created, phone_number=self.phone_number, first_name=self.first_name,
                                   expiration_date=self.expiration_date, activation_key=self.activation_key)
 
 

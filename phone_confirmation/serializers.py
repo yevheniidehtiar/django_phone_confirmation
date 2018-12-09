@@ -80,7 +80,7 @@ class ActivationKeyMobileSerializer(serializers.ModelSerializer):
                                   code=self.initial_data.get('confirmation_code'))
         if is_valid:
             if self.instance:
-                self.instance.send_activation_key_created_signal()
+                self.instance.send_mobile_token_created_signal()
                 self.Meta.model.objects.clear_phone_number_confirmations(
                     phone_number=self.instance.phone_number)
             else:
