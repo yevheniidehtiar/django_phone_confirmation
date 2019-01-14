@@ -75,7 +75,7 @@ class ActivationKeyMobileSerializer(serializers.ModelSerializer):
     def is_valid(self, raise_exception=False):
         is_valid = super(ActivationKeyMobileSerializer, self).is_valid(raise_exception=raise_exception)
         self.instance = self.Meta.model.objects. \
-            check_confirmation_code(id=self.initial_data.get('confirmation_id'),
+            check_confirmation_code(pk=self.initial_data.get('confirmation_id'),
                                     code=self.initial_data.get('confirmation_code'))
         if is_valid:
             if self.instance:
