@@ -65,6 +65,14 @@ class PhoneConfirmationManager(models.Manager):
                                               phone_number=phone_number,
                                               code=code).order_by('-created_at').first()
 
+    def check_confirmation_code(self, code, pk):
+        """Get the PhoneConfirmation for the phone number and code."""
+        time_threshold = timezone.now() - timedelta(minutes=ACTIVATION_TIMEOUT)
+        if pk is not None:
+            return self.get_queryset().filter(created_at__gte=time_threshold,
+                                              pk=pk,
+                                              code=code).order_by('-created_at').first()
+
     def clear_phone_number_confirmations(self, phone_number):
         """Remove all confirmations for the phone number."""
         self.get_queryset().filter(phone_number=phone_number).delete()
