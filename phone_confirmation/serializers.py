@@ -15,7 +15,7 @@ class ConfirmationMobileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PhoneConfirmation
-        fields = ('confirmation_id', 'phone_number')
+        fields = ('confirmation_id', 'phone_number', 'first_name')
 
     def get_pk(self, obj):
         return obj.pk
