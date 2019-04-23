@@ -6,7 +6,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.core import signing
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from phone_confirmation.fields import RandomPinField
@@ -23,6 +23,7 @@ ACTIVATION_TIMEOUT = phone_settings.get('ACTIVATION_TIMEOUT', 15 * 60)  # Second
 TOKEN_PERIOD = phone_settings.get('TOKEN_PERIOD', 1)  # 1 hour as default
 SMS_MESSAGE = phone_settings.get('SMS_MESSAGE', 'Your confirmation code is %(code)s')
 FROM_NUMBER = phone_settings.get('FROM_NUMBER', '')
+TEST_CONFIRMATIONS = phone_settings.get('TEST_CONFIRMATIONS', [])
 MAX_CONFIRMATIONS = phone_settings.get('MAX_CONFIRMATIONS', 10)
 SILENT_CONFIRMATIONS_FILTER = phone_settings.get('SILENT_CONFIRMATIONS_FILTER', None)
 CODE_LENGTH = phone_settings.get('CONFIRMATION_CODE_LENGTH', 6)
@@ -132,6 +133,14 @@ class PhoneConfirmation(models.Model):
     def send_mobile_token_created_signal(self):
         self._send_signal_and_log(mobile_token_created, phone_number=self.phone_number, first_name=self.first_name,
                                   expiration_date=self.expiration_date, activation_key=self.activation_key)
+
+
+@receiver(pre_save, sender=PhoneConfirmation)
+def pre_save_phone_confirmation_receiver(sender, instance, **kwargs):
+    if TEST_CONFIRMATIONS:
+        for phone, code in TEST_CONFIRMATIONS:
+            if instance.phone_number == phone:
+                instance.code = code
 
 
 @receiver(post_save, sender=PhoneConfirmation)
